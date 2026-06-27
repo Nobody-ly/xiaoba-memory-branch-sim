@@ -1,91 +1,89 @@
-# User Guide
+# 用户指南
 
-This guide explains the simulator in plain language.
+这份文档给不改 XiaoBa、也不改本项目代码的测试使用者看。
 
-## What This Is
+## 这是什么
 
-This project is a small testing tool for XiaoBa.
+这是一个用于测试 XiaoBa 的本地对话脚手架。
 
-It pretends to be a user chatting with XiaoBa many times in a row. After XiaoBa
-replies, another model plays the role of the next user and sends a new message.
-This creates a long test conversation without you having to type every message
-by hand.
+它会假装成一个用户，连续给 XiaoBa 发消息。XiaoBa 每回复一次，脚手架就让另一个模型扮演“下一轮用户”，根据 XiaoBa 的最终回复继续提问。这样就能自动生成一段较长的测试对话，不需要你手动一轮轮输入。
 
-It is useful when you want to check things like:
+它适合用来检查：
 
-- Can XiaoBa keep track of a long conversation?
-- Can XiaoBa use tools during a longer task?
-- Can XiaoBa recover information from an earlier simulated session?
-- Did a XiaoBa branch behave better or worse than another branch?
-- Are memory branch logs and injected memory results working?
+- XiaoBa 能不能接住长对话。
+- XiaoBa 会不会在长任务中正确使用工具。
+- XiaoBa 能不能从之前的模拟会话里找回信息。
+- 不同 XiaoBa 分支或版本的效果有没有差异。
+- memory branch 的搜索、注入、丢弃等日志是否正常。
 
-## What This Does Not Do
+## 它不会做什么
 
-It does not open the real CatsCo web chat.
+它不会打开真实的 CatsCo 网页聊天。
 
-It does not send messages to a real group.
+它不会往真实群聊里发消息。
 
-It does not change XiaoBa source code.
+它不会修改 XiaoBa 源码。
 
-It does not bring its own model API key. It uses the model settings from the
-XiaoBa folder you point it at.
+它不会自带模型 API key。它使用你指定的 XiaoBa 文件夹里的模型配置。
 
-## The Mental Model
+## 最直观的理解
 
-Think of three pieces:
+可以把它想成三部分：
 
-1. Target XiaoBa
+1. 被测试的 XiaoBa
 
-   This is the XiaoBa version you want to test, for example:
+   也就是你要测试的 XiaoBa 项目文件夹，例如：
 
-   `D:\codex_workspace\XiaoBa-CLI`
+   ```text
+   D:\codex_workspace\XiaoBa-CLI
+   ```
 
-2. Simulator
+2. 这个测试脚手架
 
-   This project:
+   也就是本项目，例如：
 
-   `D:\codex_workspace\xiaoba-memory-branch-sim`
+   ```text
+   D:\codex_workspace\xiaoba-memory-branch-sim
+   ```
 
-   It sends fake user messages to XiaoBa and records what happened.
+   它负责不断向 XiaoBa 发送模拟用户消息，并记录发生了什么。
 
-3. Run output
+3. 每次测试产生的输出目录
 
-   A folder created for one test run, usually under:
+   通常在：
 
-   `D:\codex_workspace\xiaoba-sim-runs`
+   ```text
+   D:\codex_workspace\xiaoba-sim-runs
+   ```
 
-   This contains the conversation summary and XiaoBa logs for that test.
+   每跑一次测试，就会生成一个独立目录，里面有对话摘要、XiaoBa 日志和运行数据。
 
-## API And Model Settings
+## 模型 API 配置怎么理解
 
-You normally do not configure API keys in this simulator.
+一般情况下，你不需要在这个脚手架里单独配置 API key。
 
-The simulator asks the target XiaoBa folder for model settings. By default it
-looks for:
+脚手架会读取你指定的 XiaoBa 文件夹里的模型配置。默认优先顺序是：
 
 1. `D:\...\XiaoBa-CLI\.dev-user-data\.env`
 2. `D:\...\XiaoBa-CLI\.env`
 
-If you use XiaoBa Dashboard and saved a custom model there, use:
+如果你是在 XiaoBa Dashboard 里保存了“自定义模型”，运行时通常使用：
 
 ```powershell
 -ModelSource custom
 ```
 
-If your target XiaoBa folder uses the normal environment variables directly, use
-or omit:
+如果你的 XiaoBa 本身就是直接通过环境变量配置模型，可以使用或省略：
 
 ```powershell
 -ModelSource env
 ```
 
-If model calls fail, first check whether that XiaoBa folder itself can chat
-normally. The simulator cannot fix a broken model key or unreachable API
-server.
+如果模型调用失败，优先检查被测试的 XiaoBa 自己能不能正常聊天。这个脚手架无法修复失效的 key、不可访问的 API 服务，或者模型服务本身的网络错误。
 
-## First Test
+## 第一次测试
 
-Open PowerShell and run:
+打开 PowerShell，运行：
 
 ```powershell
 D:\codex_workspace\xiaoba-memory-branch-sim\run.ps1 `
@@ -97,25 +95,31 @@ D:\codex_workspace\xiaoba-memory-branch-sim\run.ps1 `
   -Verbose
 ```
 
-This starts a short simulated chat with XiaoBa.
+含义是：
 
-When it finishes, open:
+- 用 `D:\codex_workspace\XiaoBa-CLI` 这个 XiaoBa 版本进行测试。
+- 跑一个普通长对话预设。
+- 测试名叫 `first-smoke-test`。
+- 一共跑 3 轮。
+- 使用 XiaoBa 的自定义模型配置。
+
+跑完后看这个目录：
 
 ```text
 D:\codex_workspace\xiaoba-sim-runs\first-smoke-test
 ```
 
-The most useful file is:
+最容易看的文件是：
 
 ```text
 sim-summary.jsonl
 ```
 
-The wrapper also prints a readable summary after the run.
+脚手架也会在命令行最后自动打印一份简短分析。
 
-## Test Without Spending Model Calls
+## 只检查命令，不真正运行
 
-If you only want to check the command and paths:
+如果你只是想确认路径、参数、模型配置有没有拼对，不想消耗模型调用，可以加 `-DryRun`：
 
 ```powershell
 D:\codex_workspace\xiaoba-memory-branch-sim\run.ps1 `
@@ -128,54 +132,59 @@ D:\codex_workspace\xiaoba-memory-branch-sim\run.ps1 `
   -Verbose
 ```
 
-`-DryRun` only prints the command. It does not run XiaoBa.
+注意：`-DryRun` 只会打印将要执行的命令，不会真的启动 XiaoBa。
 
-## Choose A Test Type
+如果你看到它只打印了一大串命令就结束了，这是正常的。
 
-Use `-Preset` to choose what kind of test you want.
+## 选择测试类型
+
+通过 `-Preset` 选择测试类型。
 
 ### `plain-long-chat`
 
-A normal long chat without tool pressure.
+普通长对话，不刻意要求使用工具。
 
-Use this first when you only want to confirm the simulator works.
+第一次测试建议先用这个，确认脚手架和模型配置是否正常。
 
 ### `long-browser-tools`
 
-A longer conversation where the fake user sometimes asks XiaoBa to use
-`agent-browser`.
+较长的多话题对话，并且会周期性让 XiaoBa 使用 `agent-browser` 做小范围公开信息确认。
 
-Use this when you want to test tool use, long ReAct turns, and memory injection
-timing.
+适合测试：
+
+- 工具调用是否正常。
+- 长 ReAct 任务是否稳定。
+- memory branch 是否有机会在主任务执行中注入结果。
 
 ### `cross-session-phase-a`
 
-Creates useful history in one simulated group.
+第一阶段：在一个模拟群组里建立一些稳定信息和决策。
 
 ### `cross-session-phase-b-strict`
 
-Starts another simulated group and checks whether XiaoBa can recover what was
-decided in Phase A.
+第二阶段：切到另一个模拟群组，只给 XiaoBa 一个项目锚点，测试它能不能从前一个会话的日志里找回信息。
 
-For this to work, Phase A and Phase B must use the same `-RuntimeRoot`.
+跨会话测试时，Phase A 和 Phase B 必须使用同一个 `-RuntimeRoot`，否则第二阶段看不到第一阶段的历史日志。
 
-## Change The Topic
+## 修改测试话题
 
-Pass `-Topic` to tell the fake user what kind of conversation to create:
+用 `-Topic` 控制“模拟用户大概要聊什么”：
 
 ```powershell
 -Topic "测试一个短对话：围绕周末小型读书会安排，关注语气、记忆承接和简洁输出"
 ```
 
-Pass `-Seed` to control the very first user message:
+用 `-Seed` 控制第一轮用户消息：
 
 ```powershell
 -Seed "我们做个短测试：我想安排一个周末小型读书会，预算低，气氛安静。你先简单回应。"
 ```
 
-## Temporarily Change XiaoBa's System Prompt
+`Topic` 是给“扮演用户的模型”看的；`Seed` 是真正发给 XiaoBa 的第一句话。
 
-Create a prompt file:
+## 临时替换 XiaoBa 的 system prompt
+
+如果你想只在这次测试里换一个 XiaoBa system prompt，可以先创建一个文件：
 
 ```powershell
 Set-Content D:\codex_workspace\xiaoba-memory-branch-sim\local-test-system-prompt.md @'
@@ -184,22 +193,24 @@ Set-Content D:\codex_workspace\xiaoba-memory-branch-sim\local-test-system-prompt
 '@ -Encoding UTF8
 ```
 
-Then pass:
+然后运行时加上：
 
 ```powershell
 -XiaoBaSystemPrompt D:\codex_workspace\xiaoba-memory-branch-sim\local-test-system-prompt.md
 ```
 
-This only affects this simulation run.
+这只影响本次模拟测试，不会改 XiaoBa 项目文件。
 
-## Analyze A Run Later
+## 之后单独分析某次结果
+
+如果测试已经跑完，之后想重新看摘要，可以运行：
 
 ```powershell
 node D:\codex_workspace\xiaoba-memory-branch-sim\analyze-run.mjs `
   --run-root D:\codex_workspace\xiaoba-sim-runs\first-smoke-test
 ```
 
-For a two-phase cross-session test:
+如果是跨会话两阶段测试，需要同时传入共享 runtime 目录：
 
 ```powershell
 node D:\codex_workspace\xiaoba-memory-branch-sim\analyze-run.mjs `
@@ -207,21 +218,54 @@ node D:\codex_workspace\xiaoba-memory-branch-sim\analyze-run.mjs `
   --runtime-root D:\codex_workspace\xiaoba-sim-runs\cross-session-demo\runtime
 ```
 
-## Common Problems
+## 常见问题
 
-### It only printed a command and did not run
+### 它只打印了一条命令，没有跑起来
 
-You used `-DryRun`. Remove it to actually run XiaoBa.
+你用了 `-DryRun`。
 
-### It says the model has a temporary error
+去掉 `-DryRun` 才会真正运行。
 
-The simulator reached XiaoBa, but XiaoBa could not call the configured model.
-Check the target XiaoBa model settings.
+### 提示模型服务临时异常
 
-### Phase B cannot recover Phase A memory
+这说明脚手架已经成功调用到 XiaoBa，但 XiaoBa 当前配置的模型没有成功返回。
 
-Make sure both phases use the same `-RuntimeRoot`.
+请检查：
 
-### I do not see anything in CatsCo web
+- XiaoBa Dashboard 里的模型配置是否正确。
+- `.dev-user-data\.env` 或 `.env` 里是否有正确配置。
+- 这个 XiaoBa 版本自己是否能正常聊天。
 
-That is expected. This tool talks to XiaoBa core directly and writes local logs.
+### 跨会话测试没找回第一阶段的信息
+
+先检查 Phase A 和 Phase B 是否用了同一个 `-RuntimeRoot`。
+
+如果 runtime root 不同，第二阶段就看不到第一阶段产生的 session logs。
+
+### 为什么 CatsCo 网页里看不到这些对话
+
+这是正常的。
+
+这个脚手架是直接调用 XiaoBa core，不是模拟网页输入，因此不会出现在真实 CatsCo 网页聊天里。
+
+### 会不会污染真实对话
+
+正常不会。
+
+它使用模拟 session 名称，并把日志写到你指定的 run 目录。建议测试时给 `-Name`、`-Session` 使用明显的测试名字，例如：
+
+```text
+sim_browser_a
+sim_memory_a
+first-smoke-test
+```
+
+## 推荐给别人怎么开始
+
+最简单的顺序是：
+
+1. 先确认目标 XiaoBa 自己能正常聊天。
+2. 跑一次 `-DryRun`。
+3. 跑一次 `plain-long-chat`，`-Turns 3`。
+4. 跑一次 `long-browser-tools`，`-Turns 5`。
+5. 如果要测跨会话记忆，再跑 `cross-session-phase-a` + `cross-session-phase-b-strict`。
