@@ -966,7 +966,7 @@ function fallbackUserMessage(turn: number): string {
 function printHelp(): void {
   console.log(`
 Usage:
-  <xiaoba-root>\\node_modules\\.bin\\tsx.cmd D:\\codex_workspace\\xiaoba-memory-branch-sim\\run-memory-branch-sim.ts --xiaoba-root <xiaoba-root> [options]
+  <xiaoba-root>\\node_modules\\.bin\\tsx.cmd <sim-root>\\run-memory-branch-sim.ts --xiaoba-root <xiaoba-root> [options]
 
 Standalone core-level XiaoBa memory branch simulation.
 It does not send messages to CatsCo web and does not modify the XiaoBa repo.
@@ -1005,8 +1005,8 @@ Options:
   --verbose
 
 Examples:
-  D:\\codex_workspace\\XiaoBa-CLI\\node_modules\\.bin\\tsx.cmd D:\\codex_workspace\\xiaoba-memory-branch-sim\\run-memory-branch-sim.ts --xiaoba-root D:\\codex_workspace\\XiaoBa-CLI --turns 20 --sessions sim_a,sim_b
-  D:\\codex_workspace\\XiaoBa-CLI\\node_modules\\.bin\\tsx.cmd D:\\codex_workspace\\xiaoba-memory-branch-sim\\run-memory-branch-sim.ts --xiaoba-root D:\\codex_workspace\\XiaoBa-CLI --session dinner_test --target-tools safe
+  <xiaoba-root>\\node_modules\\.bin\\tsx.cmd <sim-root>\\run-memory-branch-sim.ts --xiaoba-root <xiaoba-root> --turns 20 --sessions sim_a,sim_b
+  <xiaoba-root>\\node_modules\\.bin\\tsx.cmd <sim-root>\\run-memory-branch-sim.ts --xiaoba-root <xiaoba-root> --session dinner_test --target-tools safe
 `);
 }
 

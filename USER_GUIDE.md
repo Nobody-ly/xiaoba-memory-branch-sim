@@ -1,14 +1,25 @@
 # 用户指南
 
-这份文档给不改 XiaoBa、也不改本项目代码的测试使用者看。
+这份文档给普通测试使用者看。你可以不改 XiaoBa，也不改这个项目，只用它来跑本地测试。
+
+本文假设你已经把本仓库下载或 clone 到自己的电脑上。后面的命令都默认你已经在本仓库根目录里。
+
+先进入本仓库目录，并设置目标 XiaoBa 路径：
+
+```powershell
+Set-Location <这个测试脚手架的目录>
+$XIAOBA_ROOT = "<你要测试的 XiaoBa-CLI 目录>"
+```
 
 ## 这是什么
 
 这是一个用于测试 XiaoBa 的本地对话脚手架。
 
-它会假装成一个用户，连续给 XiaoBa 发消息。XiaoBa 每回复一次，脚手架就让另一个模型扮演“下一轮用户”，根据 XiaoBa 的最终回复继续提问。这样就能自动生成一段较长的测试对话，不需要你手动一轮轮输入。
+它会假装成用户，连续给 XiaoBa 发消息。XiaoBa 每回复一次，它就让另一个模型扮演“下一轮用户”，根据 XiaoBa 的最终回复继续提问。
 
-它适合用来检查：
+这样你不用手动一轮轮输入，也能得到一段较长的测试对话。
+
+它适合检查：
 
 - XiaoBa 能不能接住长对话。
 - XiaoBa 会不会在长任务中正确使用工具。
@@ -18,54 +29,44 @@
 
 ## 它不会做什么
 
-它不会打开真实的 CatsCo 网页聊天。
+它不会打开真实 CatsCo 网页聊天。
 
-它不会往真实群聊里发消息。
+它不会往真实群聊发消息。
 
 它不会修改 XiaoBa 源码。
 
-它不会自带模型 API key。它使用你指定的 XiaoBa 文件夹里的模型配置。
+它不会自带模型 API key。它使用你指定的 XiaoBa 目录里的模型配置。
 
 ## 最直观的理解
 
-可以把它想成三部分：
+你可以把它想成三部分：
 
 1. 被测试的 XiaoBa
 
-   也就是你要测试的 XiaoBa 项目文件夹，例如：
-
-   ```text
-   D:\codex_workspace\XiaoBa-CLI
-   ```
+   也就是 `$XIAOBA_ROOT` 指向的目录。
 
 2. 这个测试脚手架
 
-   也就是本项目，例如：
-
-   ```text
-   D:\codex_workspace\xiaoba-memory-branch-sim
-   ```
-
-   它负责不断向 XiaoBa 发送模拟用户消息，并记录发生了什么。
+   也就是你当前 clone 下来的这个仓库。
 
 3. 每次测试产生的输出目录
 
-   通常在：
+   默认通常在本仓库的上一级目录下：
 
    ```text
-   D:\codex_workspace\xiaoba-sim-runs
+   ..\xiaoba-sim-runs\<测试名>
    ```
 
-   每跑一次测试，就会生成一个独立目录，里面有对话摘要、XiaoBa 日志和运行数据。
+脚手架负责向 XiaoBa 发送模拟用户消息，并把对话摘要、XiaoBa logs、运行数据写到输出目录。
 
 ## 模型 API 配置怎么理解
 
 一般情况下，你不需要在这个脚手架里单独配置 API key。
 
-脚手架会读取你指定的 XiaoBa 文件夹里的模型配置。默认优先顺序是：
+脚手架会读取你指定的 XiaoBa 目录里的配置。默认优先顺序是：
 
-1. `D:\...\XiaoBa-CLI\.dev-user-data\.env`
-2. `D:\...\XiaoBa-CLI\.env`
+1. `$XIAOBA_ROOT\.dev-user-data\.env`
+2. `$XIAOBA_ROOT\.env`
 
 如果你是在 XiaoBa Dashboard 里保存了“自定义模型”，运行时通常使用：
 
@@ -73,7 +74,7 @@
 -ModelSource custom
 ```
 
-如果你的 XiaoBa 本身就是直接通过环境变量配置模型，可以使用或省略：
+如果你的 XiaoBa 本身直接通过环境变量配置模型，可以使用或省略：
 
 ```powershell
 -ModelSource env
@@ -83,11 +84,18 @@
 
 ## 第一次测试
 
-打开 PowerShell，运行：
+打开 PowerShell，先进入本仓库根目录：
 
 ```powershell
-D:\codex_workspace\xiaoba-memory-branch-sim\run.ps1 `
-  -XiaoBaRoot D:\codex_workspace\XiaoBa-CLI `
+Set-Location <这个测试脚手架的目录>
+$XIAOBA_ROOT = "<你要测试的 XiaoBa-CLI 目录>"
+```
+
+然后运行：
+
+```powershell
+.\run.ps1 `
+  -XiaoBaRoot $XIAOBA_ROOT `
   -Preset plain-long-chat `
   -Name first-smoke-test `
   -Turns 3 `
@@ -97,33 +105,33 @@ D:\codex_workspace\xiaoba-memory-branch-sim\run.ps1 `
 
 含义是：
 
-- 用 `D:\codex_workspace\XiaoBa-CLI` 这个 XiaoBa 版本进行测试。
+- 用 `$XIAOBA_ROOT` 指向的 XiaoBa 版本进行测试。
 - 跑一个普通长对话预设。
 - 测试名叫 `first-smoke-test`。
 - 一共跑 3 轮。
 - 使用 XiaoBa 的自定义模型配置。
 
-跑完后看这个目录：
+跑完后，脚手架会在命令行最后打印一份简短分析。
+
+默认输出目录通常在本仓库的上一级目录下：
 
 ```text
-D:\codex_workspace\xiaoba-sim-runs\first-smoke-test
+..\xiaoba-sim-runs\first-smoke-test
 ```
 
-最容易看的文件是：
+如果你想自己指定输出位置，可以加：
 
-```text
-sim-summary.jsonl
+```powershell
+-RunRoot "..\xiaoba-sim-runs\first-smoke-test"
 ```
-
-脚手架也会在命令行最后自动打印一份简短分析。
 
 ## 只检查命令，不真正运行
 
 如果你只是想确认路径、参数、模型配置有没有拼对，不想消耗模型调用，可以加 `-DryRun`：
 
 ```powershell
-D:\codex_workspace\xiaoba-memory-branch-sim\run.ps1 `
-  -XiaoBaRoot D:\codex_workspace\XiaoBa-CLI `
+.\run.ps1 `
+  -XiaoBaRoot $XIAOBA_ROOT `
   -Preset plain-long-chat `
   -Name dry-run-test `
   -Turns 3 `
@@ -166,6 +174,36 @@ D:\codex_workspace\xiaoba-memory-branch-sim\run.ps1 `
 
 跨会话测试时，Phase A 和 Phase B 必须使用同一个 `-RuntimeRoot`，否则第二阶段看不到第一阶段的历史日志。
 
+## 跨会话测试示例
+
+```powershell
+Set-Location <这个测试脚手架的目录>
+$XIAOBA_ROOT = "<你要测试的 XiaoBa-CLI 目录>"
+$BASE = "..\xiaoba-sim-runs\cross-session-demo"
+
+.\run.ps1 `
+  -XiaoBaRoot $XIAOBA_ROOT `
+  -Preset cross-session-phase-a `
+  -RunRoot "$BASE\phase-a" `
+  -RuntimeRoot "$BASE\runtime" `
+  -ModelSource custom `
+  -Verbose
+
+.\run.ps1 `
+  -XiaoBaRoot $XIAOBA_ROOT `
+  -Preset cross-session-phase-b-strict `
+  -RunRoot "$BASE\phase-b" `
+  -RuntimeRoot "$BASE\runtime" `
+  -ModelSource custom `
+  -Verbose
+```
+
+关键点是两个阶段都使用：
+
+```powershell
+-RuntimeRoot "$BASE\runtime"
+```
+
 ## 修改测试话题
 
 用 `-Topic` 控制“模拟用户大概要聊什么”：
@@ -174,7 +212,7 @@ D:\codex_workspace\xiaoba-memory-branch-sim\run.ps1 `
 -Topic "测试一个短对话：围绕周末小型读书会安排，关注语气、记忆承接和简洁输出"
 ```
 
-用 `-Seed` 控制第一轮用户消息：
+用 `-Seed` 控制第一轮真正发给 XiaoBa 的用户消息：
 
 ```powershell
 -Seed "我们做个短测试：我想安排一个周末小型读书会，预算低，气氛安静。你先简单回应。"
@@ -187,7 +225,7 @@ D:\codex_workspace\xiaoba-memory-branch-sim\run.ps1 `
 如果你想只在这次测试里换一个 XiaoBa system prompt，可以先创建一个文件：
 
 ```powershell
-Set-Content D:\codex_workspace\xiaoba-memory-branch-sim\local-test-system-prompt.md @'
+Set-Content ".\local-test-system-prompt.md" @'
 你是一个用于本地测试的 XiaoBa 助手。
 回答要简洁、自然、中文优先。
 '@ -Encoding UTF8
@@ -196,7 +234,7 @@ Set-Content D:\codex_workspace\xiaoba-memory-branch-sim\local-test-system-prompt
 然后运行时加上：
 
 ```powershell
--XiaoBaSystemPrompt D:\codex_workspace\xiaoba-memory-branch-sim\local-test-system-prompt.md
+-XiaoBaSystemPrompt ".\local-test-system-prompt.md"
 ```
 
 这只影响本次模拟测试，不会改 XiaoBa 项目文件。
@@ -206,16 +244,16 @@ Set-Content D:\codex_workspace\xiaoba-memory-branch-sim\local-test-system-prompt
 如果测试已经跑完，之后想重新看摘要，可以运行：
 
 ```powershell
-node D:\codex_workspace\xiaoba-memory-branch-sim\analyze-run.mjs `
-  --run-root D:\codex_workspace\xiaoba-sim-runs\first-smoke-test
+node .\analyze-run.mjs `
+  --run-root "..\xiaoba-sim-runs\first-smoke-test"
 ```
 
 如果是跨会话两阶段测试，需要同时传入共享 runtime 目录：
 
 ```powershell
-node D:\codex_workspace\xiaoba-memory-branch-sim\analyze-run.mjs `
-  --run-root D:\codex_workspace\xiaoba-sim-runs\cross-session-demo\phase-b `
-  --runtime-root D:\codex_workspace\xiaoba-sim-runs\cross-session-demo\runtime
+node .\analyze-run.mjs `
+  --run-root "$BASE\phase-b" `
+  --runtime-root "$BASE\runtime"
 ```
 
 ## 常见问题
@@ -233,7 +271,7 @@ node D:\codex_workspace\xiaoba-memory-branch-sim\analyze-run.mjs `
 请检查：
 
 - XiaoBa Dashboard 里的模型配置是否正确。
-- `.dev-user-data\.env` 或 `.env` 里是否有正确配置。
+- `$XIAOBA_ROOT\.dev-user-data\.env` 或 `$XIAOBA_ROOT\.env` 是否有正确配置。
 - 这个 XiaoBa 版本自己是否能正常聊天。
 
 ### 跨会话测试没找回第一阶段的信息

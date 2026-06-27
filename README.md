@@ -1,8 +1,14 @@
 # XiaoBa Memory Branch Sim
 
-Standalone core-level conversation simulator for testing XiaoBa. It is kept
-outside any XiaoBa checkout so the same harness can be used against different
-branches or local builds.
+Standalone core-level conversation simulator for testing XiaoBa.
+
+Clone this repository anywhere. Run commands from this repository root, then
+point the simulator at the XiaoBa checkout you want to test.
+
+```powershell
+Set-Location <this-repo-clone>
+$XIAOBA_ROOT = "<target-XiaoBa-CLI-checkout>"
+```
 
 The simulator does not send messages to CatsCo web and does not modify the
 target XiaoBa source tree.
@@ -23,8 +29,8 @@ target XiaoBa source tree.
 
 - A target XiaoBa checkout with dependencies installed.
 - Node.js available on PATH.
-- A model configuration available through the target checkout's `.env` or
-  `.dev-user-data\.env`.
+- A model configuration available through the target XiaoBa checkout's `.env`
+  or `.dev-user-data\.env`.
 
 The wrapper prefers `<xiaoba-root>\.dev-user-data\.env` when present, then
 falls back to `<xiaoba-root>\.env`.
@@ -36,19 +42,24 @@ For Codex-based maintenance and extension notes, see
 ## Quick Start
 
 ```powershell
-D:\codex_workspace\xiaoba-memory-branch-sim\run.ps1 `
-  -XiaoBaRoot D:\codex_workspace\XiaoBa-CLI `
+Set-Location <this-repo-clone>
+$XIAOBA_ROOT = "<target-XiaoBa-CLI-checkout>"
+
+.\run.ps1 `
+  -XiaoBaRoot $XIAOBA_ROOT `
   -Preset long-browser-tools `
   -Name browser-smoke-a `
   -ModelSource custom `
   -Verbose
 ```
 
-Output will be under:
+By default, output is written under a sibling folder of this repository:
 
 ```text
-D:\codex_workspace\xiaoba-sim-runs\browser-smoke-a
+..\xiaoba-sim-runs\browser-smoke-a
 ```
+
+Pass `-RunRoot` if you want a specific output directory.
 
 The wrapper runs the simulator and then calls `analyze-run.mjs` automatically.
 Add `-DryRun` to print the resolved command without running XiaoBa.
@@ -74,21 +85,23 @@ More copy-paste commands are in [examples/commands.md](examples/commands.md).
 Use one shared runtime root so Phase B can search the logs produced by Phase A.
 
 ```powershell
-$base = 'D:\codex_workspace\xiaoba-sim-runs\cross-session-demo-a'
+Set-Location <this-repo-clone>
+$XIAOBA_ROOT = "<target-XiaoBa-CLI-checkout>"
+$BASE = "..\xiaoba-sim-runs\cross-session-demo-a"
 
-D:\codex_workspace\xiaoba-memory-branch-sim\run.ps1 `
-  -XiaoBaRoot D:\codex_workspace\XiaoBa-CLI `
+.\run.ps1 `
+  -XiaoBaRoot $XIAOBA_ROOT `
   -Preset cross-session-phase-a `
-  -RunRoot "$base\phase-a" `
-  -RuntimeRoot "$base\runtime" `
+  -RunRoot "$BASE\phase-a" `
+  -RuntimeRoot "$BASE\runtime" `
   -ModelSource custom `
   -Verbose
 
-D:\codex_workspace\xiaoba-memory-branch-sim\run.ps1 `
-  -XiaoBaRoot D:\codex_workspace\XiaoBa-CLI `
+.\run.ps1 `
+  -XiaoBaRoot $XIAOBA_ROOT `
   -Preset cross-session-phase-b-strict `
-  -RunRoot "$base\phase-b" `
-  -RuntimeRoot "$base\runtime" `
+  -RunRoot "$BASE\phase-b" `
+  -RuntimeRoot "$BASE\runtime" `
   -ModelSource custom `
   -Verbose
 ```
@@ -96,16 +109,16 @@ D:\codex_workspace\xiaoba-memory-branch-sim\run.ps1 `
 ## Analyze Existing Output
 
 ```powershell
-node D:\codex_workspace\xiaoba-memory-branch-sim\analyze-run.mjs `
-  --run-root D:\codex_workspace\xiaoba-sim-runs\browser-smoke-a
+node .\analyze-run.mjs `
+  --run-root "..\xiaoba-sim-runs\browser-smoke-a"
 ```
 
 For two-phase runs, also pass the shared runtime root:
 
 ```powershell
-node D:\codex_workspace\xiaoba-memory-branch-sim\analyze-run.mjs `
-  --run-root D:\codex_workspace\xiaoba-sim-runs\cross-session-demo-a\phase-b `
-  --runtime-root D:\codex_workspace\xiaoba-sim-runs\cross-session-demo-a\runtime
+node .\analyze-run.mjs `
+  --run-root "$BASE\phase-b" `
+  --runtime-root "$BASE\runtime"
 ```
 
 ## Direct Script Options
@@ -113,9 +126,9 @@ node D:\codex_workspace\xiaoba-memory-branch-sim\analyze-run.mjs `
 The underlying script is still available when you need full control:
 
 ```powershell
-D:\codex_workspace\XiaoBa-CLI\node_modules\.bin\tsx.cmd `
-  D:\codex_workspace\xiaoba-memory-branch-sim\run-memory-branch-sim.ts `
-  --xiaoba-root D:\codex_workspace\XiaoBa-CLI `
+& "$XIAOBA_ROOT\node_modules\.bin\tsx.cmd" `
+  ".\run-memory-branch-sim.ts" `
+  --xiaoba-root $XIAOBA_ROOT `
   --turns 12
 ```
 
